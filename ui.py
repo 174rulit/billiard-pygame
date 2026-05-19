@@ -2,7 +2,7 @@ import pygame
 from config import *
 
 class UI:
-    """Класс для отрисовки интерфейса - отдельно от игровой логики"""
+    """Класс для отрисовки интерфейса"""
     
     def __init__(self, screen):
         self.screen = screen
@@ -13,7 +13,6 @@ class UI:
     
     def draw_table(self):
         """Отрисовка бильярдного стола"""
-        # Фон стола
         pygame.draw.rect(self.screen, COLORS['TABLE'], 
                         (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT))
         
@@ -31,19 +30,24 @@ class UI:
         pygame.draw.rect(self.screen, COLORS['CLOTH'],
                         (TABLE_MARGIN, TABLE_MARGIN, TABLE_WIDTH, TABLE_HEIGHT))
         
-        # Разметка (золотая линия)
+        # Разметка
         pygame.draw.rect(self.screen, COLORS['LINE'],
                         (TABLE_MARGIN, TABLE_MARGIN, TABLE_WIDTH, TABLE_HEIGHT), 3)
+        
+        # Линия раздела (центр)
+        pygame.draw.line(self.screen, COLORS['LINE'],
+                        (SCREEN_WIDTH // 2, TABLE_MARGIN),
+                        (SCREEN_WIDTH // 2, SCREEN_HEIGHT - TABLE_MARGIN), 2)
         
         # Лузы
         for px, py in POCKETS:
             pygame.draw.circle(self.screen, COLORS['POCKET'], (px, py), POCKET_RADIUS)
             pygame.draw.circle(self.screen, COLORS['POCKET_INNER'], (px, py), POCKET_RADIUS - 5)
     
-    def draw_scores(self, scores, current_player):
-        """Отрисовка счета и активного игрока"""
+    def draw_scores(self, scores, current_player, player1_type, player2_type):
+        """Отрисовка счета и типов шаров игроков"""
         # Игрок 1
-        p1_rect = pygame.Rect(20, 20, 180, 80)
+        p1_rect = pygame.Rect(20, 20, 220, 100)
         if current_player == 1:
             pygame.draw.rect(self.screen, (218, 165, 32, 100), p1_rect, 3, 10)
         pygame.draw.rect(self.screen, (0, 0, 0, 150), p1_rect, 0, 10)
@@ -51,65 +55,72 @@ class UI:
         p1_text = self.font_small.render("ИГРОК 1", True, COLORS['UI_TEXT'])
         p1_score = self.font_medium.render(str(scores[1]), True, COLORS['WHITE'])
         self.screen.blit(p1_text, (35, 30))
-        self.screen.blit(p1_score, (35, 60))
+        self.screen.blit(p1_score, (35, 65))
+        
+        # Тип шаров игрока 1
+        if player1_type == 'solid':
+            type_text = self.font_tiny.render("СПЛОШНЫЕ", True, (255, 255, 100))
+        elif player1_type == 'stripe':
+            type_text = self.font_tiny.render("ПОЛОСАТЫЕ", True, (255, 255, 100))
+        else:
+            type_text = self.font_tiny.render("—", True, (150, 150, 150))
+        self.screen.blit(type_text, (35, 95))
         
         # Игрок 2
-        p2_rect = pygame.Rect(SCREEN_WIDTH - 200, 20, 180, 80)
+        p2_rect = pygame.Rect(SCREEN_WIDTH - 240, 20, 220, 100)
         if current_player == 2:
             pygame.draw.rect(self.screen, (218, 165, 32, 100), p2_rect, 3, 10)
         pygame.draw.rect(self.screen, (0, 0, 0, 150), p2_rect, 0, 10)
         
         p2_text = self.font_small.render("ИГРОК 2", True, COLORS['UI_TEXT'])
         p2_score = self.font_medium.render(str(scores[2]), True, COLORS['YELLOW'])
-        self.screen.blit(p2_text, (SCREEN_WIDTH - 185, 30))
-        self.screen.blit(p2_score, (SCREEN_WIDTH - 185, 60))
+        self.screen.blit(p2_text, (SCREEN_WIDTH - 225, 30))
+        self.screen.blit(p2_score, (SCREEN_WIDTH - 225, 65))
+        
+        # Тип шаров игрока 2
+        if player2_type == 'solid':
+            type_text = self.font_tiny.render("СПЛОШНЫЕ", True, (255, 255, 100))
+        elif player2_type == 'stripe':
+            type_text = self.font_tiny.render("ПОЛОСАТЫЕ", True, (255, 255, 100))
+        else:
+            type_text = self.font_tiny.render("—", True, (150, 150, 150))
+        self.screen.blit(type_text, (SCREEN_WIDTH - 225, 95))
     
     def draw_power_bar(self, power):
-        """Отрисовка шкалы силы удара"""
+        """Отрисовка шкалы силы"""
         bar_x = SCREEN_WIDTH // 2 - POWER_BAR_WIDTH // 2
         bar_y = SCREEN_HEIGHT - 60
         
-        # Фон
         pygame.draw.rect(self.screen, (50, 50, 50),
                         (bar_x, bar_y, POWER_BAR_WIDTH, POWER_BAR_HEIGHT))
         
-        # Заполнение
-        fill_width = int((power / MAX_POWER) * POWER_BAR_WIDTH)
-        color = (100, 255, 100) if power < MAX_POWER * 0.5 else (255, 100, 100)
+        fill_width = int((power / 22) * POWER_BAR_WIDTH)
+        color = (100, 255, 100) if power < 11 else (255, 100, 100)
         pygame.draw.rect(self.screen, color,
                         (bar_x, bar_y, fill_width, POWER_BAR_HEIGHT))
         
-        # Рамка
         pygame.draw.rect(self.screen, COLORS['UI_TEXT'],
                         (bar_x, bar_y, POWER_BAR_WIDTH, POWER_BAR_HEIGHT), 2)
         
-        # Текст
         power_text = self.font_tiny.render(f"СИЛА: {int(power)}", True, COLORS['UI_TEXT'])
         self.screen.blit(power_text, (bar_x + POWER_BAR_WIDTH // 2 - 40, bar_y - 25))
     
     def draw_aim_line(self, start, end):
-        """Отрисовка линии прицела"""
+        """Линия прицела"""
         if start and end:
-            pygame.draw.line(self.screen, COLORS['LINE'], start, end, 3)
-            # Пунктирный эффект
-            for i in range(0, 100, 10):
-                t = i / 100
-                x = start[0] + (end[0] - start[0]) * t
-                y = start[1] + (end[1] - start[1]) * t
-                pygame.draw.circle(self.screen, COLORS['LINE'], (int(x), int(y)), 3)
+            pygame.draw.line(self.screen, COLORS['GOLD'], start, end, 3)
     
     def draw_turn_indicator(self, current_player):
-        """Индикатор текущего игрока"""
+        """Индикатор хода"""
         text = self.font_medium.render(f"ХОД: ИГРОК {current_player}", True, COLORS['UI_TEXT'])
         x = SCREEN_WIDTH // 2 - text.get_width() // 2
-        y = 20
-        # Фон
+        y = 15
         bg_rect = pygame.Rect(x - 10, y - 5, text.get_width() + 20, text.get_height() + 10)
         pygame.draw.rect(self.screen, (0, 0, 0, 200), bg_rect, 0, 10)
         self.screen.blit(text, (x, y))
     
     def draw_game_over(self, winner):
-        """Экран окончания игры"""
+        """Экран победы"""
         if winner:
             overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
             overlay.set_alpha(200)
@@ -126,14 +137,14 @@ class UI:
             self.screen.blit(sub_text, (sub_x, y + 70))
     
     def draw_instructions(self):
-        """Подсказки по управлению"""
+        """Подсказки"""
         instr = [
-            "Игрок 1 (Белый): ЗАЖМИТЕ ЛКМ на шаре → ТЯНИТЕ → ОТПУСТИТЕ",
-            "Игрок 2 (Желтый): ЗАЖМИТЕ ПКМ на шаре → ТЯНИТЕ → ОТПУСТИТЕ",
-            "ПРОБЕЛ - новая игра | R - сброс удара"
+            "Игрок 1: ЛКМ на белом шаре → ТЯНИТЕ → ОТПУСТИТЕ",
+            "Игрок 2: ПКМ на белом шаре → ТЯНИТЕ → ОТПУСТИТЕ",
+            "ПРОБЕЛ - новая игра | R - сброс битка"
         ]
         
-        y = SCREEN_HEIGHT - 110
+        y = SCREEN_HEIGHT - 95
         for i, line in enumerate(instr):
             text = self.font_tiny.render(line, True, (180, 180, 180))
             x = SCREEN_WIDTH // 2 - text.get_width() // 2
