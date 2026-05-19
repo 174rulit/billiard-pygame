@@ -32,6 +32,10 @@ COLORS = {
     'PINK': (255, 105, 180),
     'BROWN': (139, 69, 19),
     'GRAY': (128, 128, 128),
+    'MAROON': (128, 0, 0),
+    'DARK_GREEN': (0, 100, 0),
+    'NAVY': (0, 0, 128),
+    'GOLD': (255, 215, 0),
     'UI_BG': (0, 0, 0, 180),
     'UI_TEXT': (255, 215, 0),
 }
@@ -57,14 +61,35 @@ POCKET_RADIUS = 16
 
 # Игровые параметры
 WIN_SCORE = 7
-NUM_COLOR_BALLS = 12
+NUM_COLOR_BALLS = 15  # 15 цветных шаров (классический пул)
 
-# Цвета для цветных шаров
+# Цвета для 15 шаров (классическая нумерация)
+# 1-7: сплошные, 9-15: полосатые
 COLOR_BALLS = [
-    COLORS['RED'], COLORS['GREEN'], COLORS['BLUE'], COLORS['ORANGE'],
-    COLORS['PURPLE'], COLORS['CYAN'], COLORS['PINK'], COLORS['BROWN'],
-    (255, 100, 100), (100, 255, 100), (100, 100, 255), (255, 200, 100)
+    COLORS['YELLOW'],   # 1
+    COLORS['BLUE'],     # 2
+    COLORS['RED'],      # 3
+    COLORS['PURPLE'],   # 4
+    COLORS['ORANGE'],   # 5
+    COLORS['GREEN'],    # 6
+    COLORS['MAROON'],   # 7
+    COLORS['BLACK'],    # 8 (черный)
+    (255, 180, 180),    # 9
+    (180, 180, 255),    # 10
+    (180, 255, 180),    # 11
+    (255, 180, 255),    # 12
+    (180, 255, 255),    # 13
+    (255, 255, 180),    # 14
+    (200, 150, 255),    # 15
 ]
 
-# FPS
+# Координаты для треугольной расстановки
+# Центр треугольника (где стоит первый шар)
+TRIANGLE_CENTER_X = SCREEN_WIDTH // 2 + 30
+TRIANGLE_CENTER_Y = SCREEN_HEIGHT // 2
+
+# Позиция битка (белый шар) - внизу
+CUE_BALL_X = SCREEN_WIDTH // 2
+CUE_BALL_Y = SCREEN_HEIGHT - TABLE_MARGIN - 60
+
 FPS = 60
