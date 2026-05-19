@@ -1,6 +1,6 @@
 """
-Бильярд для двоих на Pygame
-Полное соответствие принципам: DRY, KISS, SOLID, чистота кода
+Классический пул для двоих на Pygame
+Один биток, треугольник из 15 шаров, игра по очереди
 """
 
 import pygame
@@ -11,11 +11,11 @@ from ui import UI
 
 def main():
     pygame.init()
-    pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("🎱 Бильярд для двоих - Pygame Edition")
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.set_caption("🎱 Классический пул для двоих")
     
     game = BilliardGame()
-    ui = UI(game.screen)
+    ui = UI(screen)
     
     clock = pygame.time.Clock()
     running = True
@@ -25,31 +25,29 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
             
-            # Управление ударом
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if not game.balls_moving and game.game_active and not game.winner:
-                    ball = game.get_player_ball(game.current_player)
-                    if ball and not ball.in_pocket:
+                    cue_ball = game.get_cue_ball()
+                    if cue_ball and not cue_ball.in_pocket:
                         pos = pygame.mouse.get_pos()
-                        # ЛКМ для игрока 1, ПКМ для игрока 2
+                        # Игрок 1 - ЛКМ, Игрок 2 - ПКМ
                         if (event.button == 1 and game.current_player == 1) or \
                            (event.button == 3 and game.current_player == 2):
-                            # Проверка, что клик по шару
-                            dx = pos[0] - ball.x
-                            dy = pos[1] - ball.y
-                            if (dx * dx + dy * dy) ** 0.5 <= ball.radius + 10:
+                            # Проверка клика по битку
+                            dx = pos[0] - cue_ball.x
+                            dy = pos[1] - cue_ball.y
+                            if (dx * dx + dy * dy) ** 0.5 <= cue_ball.radius + 10:
                                 game.dragging = True
-                                game.drag_start = (ball.x, ball.y)
+                                game.drag_start = (cue_ball.x, cue_ball.y)
                                 game.drag_end = pos
             
             elif event.type == pygame.MOUSEMOTION:
                 if game.dragging:
                     game.drag_end = pygame.mouse.get_pos()
-                    # Расчет силы
                     dx = game.drag_start[0] - game.drag_end[0]
                     dy = game.drag_start[1] - game.drag_end[1]
                     dist = min(((dx * dx + dy * dy) ** 0.5), 150)
-                    game.power = (dist / 150) * MAX_POWER
+                    game.power = (dist / 150) * 22
             
             elif event.type == pygame.MOUSEBUTTONUP:
                 if game.dragging:
@@ -57,35 +55,33 @@ def main():
                     game.dragging = False
                     game.power = 0
             
-            # Клавиатура
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
-                    game.init_game()
+                    game.new_game()
                 elif event.key == pygame.K_r:
                     if not game.balls_moving:
-                        game.reset_round()
+                        game.reset_cue_ball()
                 elif event.key == pygame.K_ESCAPE:
                     running = False
         
-        # Обновление физики
         game.update_physics()
         
         # Отрисовка
         ui.draw_table()
         
-        # Линия прицела
         if game.dragging and game.drag_start and game.drag_end and not game.balls_moving:
             ui.draw_aim_line(game.drag_start, game.drag_end)
         
-        # Шары
         for ball in game.balls:
-            ball.draw(game.screen)
+            ball.draw(screen)
         
-        # Интерфейс
-        ui.draw_scores(game.scores, game.current_player)
+        ui.draw_scores(game.scores, game.current_player, 
+                      game.player1_type, game.player2_type)
         ui.draw_turn_indicator(game.current_player)
+        
         if game.dragging and game.power > 0:
             ui.draw_power_bar(game.power)
+        
         ui.draw_instructions()
         
         if game.winner:
