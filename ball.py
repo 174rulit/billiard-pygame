@@ -1,7 +1,7 @@
 import math
 import pygame
 from config import BALL_RADIUS, COLORS
-
+#
 class Ball:
     """Класс шара - полная инкапсуляция свойств и методов"""
     
