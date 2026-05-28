@@ -1,10 +1,3 @@
-"""
-Классический пул для двоих на Pygame
-- Расстановка как на скриншоте Poolians
-- Траектория полёта белого шара
-- Увеличенные шары и лунки
-"""
-
 import pygame
 import sys
 from config import *
@@ -47,10 +40,8 @@ def main():
                     cue_ball = game.get_cue_ball()
                     if cue_ball and not cue_ball.in_pocket:
                         pos = pygame.mouse.get_pos()
-                        # Игрок 1 - ЛКМ, Игрок 2 - ПКМ
                         if (event.button == 1 and game.current_player == 1) or \
                            (event.button == 3 and game.current_player == 2):
-                            # Проверка клика по шару
                             dx = pos[0] - cue_ball.x
                             dy = pos[1] - cue_ball.y
                             if (dx * dx + dy * dy) ** 0.5 <= cue_ball.radius + 20:
@@ -93,12 +84,12 @@ def main():
         ui.draw_player_panels(game.scores, game.current_player, 
                               game.player1_type, game.player2_type)
         
-        # ТРАЕКТОРИЯ ПОЛЁТА БЕЛОГО ШАРА (как на скриншоте)
+        # ТРАЕКТОРИЯ ПОЛЁТА (исправленная - вперёд от шара)
         if game.dragging and game.drag_start and game.drag_end and not game.balls_moving:
             cue_ball = game.get_cue_ball()
             ui.draw_trajectory(game.drag_start, game.drag_end, cue_ball)
         
-        # Отрисовка шаров
+        # Шары
         for ball in game.balls:
             ball.draw(screen)
         
