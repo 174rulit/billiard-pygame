@@ -6,17 +6,13 @@
 import os
 
 # Размеры окна
-SCREEN_WIDTH = 1300
-SCREEN_HEIGHT = 800
-TABLE_MARGIN = 60
+SCREEN_WIDTH = 1400
+SCREEN_HEIGHT = 850
+TABLE_MARGIN = 70
 
 # Размеры стола
 TABLE_WIDTH = SCREEN_WIDTH - TABLE_MARGIN * 2
 TABLE_HEIGHT = SCREEN_HEIGHT - TABLE_MARGIN * 2
-
-# Панели для информации об игроках (вне стола)
-PLAYER_PANEL_HEIGHT = 100
-PLAYER_PANEL_Y = 20
 
 # Цвета (RGB)
 COLORS = {
@@ -26,7 +22,7 @@ COLORS = {
     'CLOTH': (25, 100, 45),
     'POCKET': (0, 0, 0),
     'POCKET_INNER': (40, 40, 40),
-    'LINE': (218, 165, 32),  # Золотой
+    'LINE': (218, 165, 32),
     'WHITE': (255, 255, 255),
     'YELLOW': (255, 215, 0),
     'RED': (255, 80, 80),
@@ -50,23 +46,23 @@ COLORS = {
 }
 
 # Физические параметры
-BALL_RADIUS = 10
+BALL_RADIUS = 14          # УВЕЛИЧЕНО с 10 до 14
 FRICTION = 0.985
 WALL_BOUNCE_DAMP = 0.95
-MAX_POWER = 22
+MAX_POWER = 25
 POWER_BAR_WIDTH = 250
 POWER_BAR_HEIGHT = 25
 
 # Лузы (координаты) - УВЕЛИЧЕННЫЙ РАДИУС
 POCKETS = [
-    (TABLE_MARGIN, TABLE_MARGIN),  # левый верх
-    (SCREEN_WIDTH - TABLE_MARGIN, TABLE_MARGIN),  # правый верх
-    (TABLE_MARGIN, SCREEN_HEIGHT - TABLE_MARGIN),  # левый низ
-    (SCREEN_WIDTH - TABLE_MARGIN, SCREEN_HEIGHT - TABLE_MARGIN),  # правый низ
-    (SCREEN_WIDTH // 2, TABLE_MARGIN),  # центр верх
-    (SCREEN_WIDTH // 2, SCREEN_HEIGHT - TABLE_MARGIN),  # центр низ
+    (TABLE_MARGIN, TABLE_MARGIN),
+    (SCREEN_WIDTH - TABLE_MARGIN, TABLE_MARGIN),
+    (TABLE_MARGIN, SCREEN_HEIGHT - TABLE_MARGIN),
+    (SCREEN_WIDTH - TABLE_MARGIN, SCREEN_HEIGHT - TABLE_MARGIN),
+    (SCREEN_WIDTH // 2, TABLE_MARGIN),
+    (SCREEN_WIDTH // 2, SCREEN_HEIGHT - TABLE_MARGIN),
 ]
-POCKET_RADIUS = 22  # УВЕЛИЧЕНО с 16 до 22
+POCKET_RADIUS = 28        # УВЕЛИЧЕНО с 22 до 28
 
 # Игровые параметры
 WIN_SCORE = 7
@@ -91,15 +87,19 @@ COLOR_BALLS = [
     (200, 150, 255),    # 15
 ]
 
-# Координаты для треугольной расстановки
-TRIANGLE_CENTER_X = SCREEN_WIDTH // 2 + 30
-TRIANGLE_CENTER_Y = SCREEN_HEIGHT // 2
+# РАВНОСТОРОННИЙ ТРЕУГОЛЬНИК
+# Расстояние между центрами шаров (диаметр + небольшой зазор)
+BALL_DISTANCE = BALL_RADIUS * 2 + 2
 
-# Позиция битка (белый шар)
+# Центр треугольника (для цветных шаров) - на ВЕРХНЕЙ половине стола
+TRIANGLE_CENTER_X = SCREEN_WIDTH // 2
+TRIANGLE_CENTER_Y = TABLE_MARGIN + TABLE_HEIGHT // 3
+
+# Позиция битка (белый шар) - в НИЖНЕЙ половине стола по центру
 CUE_BALL_X = SCREEN_WIDTH // 2
-CUE_BALL_Y = SCREEN_HEIGHT - TABLE_MARGIN - 80
+CUE_BALL_Y = SCREEN_HEIGHT - TABLE_MARGIN - 100
 
-# Пути к звуковым файлам (создайте папку sounds)
+# Пути к звуковым файлам
 SOUNDS_DIR = "sounds"
 MUSIC_FILE = os.path.join(SOUNDS_DIR, "background_music.mp3")
 POCKET_SOUND_FILE = os.path.join(SOUNDS_DIR, "pocket.mp3")
