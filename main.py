@@ -1,6 +1,9 @@
 """
 Классический пул для двоих на Pygame
-С музыкой, звуками и улучшенным интерфейсом
+- Равносторонний треугольник из 15 шаров
+- Белый шар на нижней половине по центру
+- Тонкая линия направления удара
+- Увеличенные шары и лунки
 """
 
 import pygame
@@ -10,28 +13,25 @@ from game import BilliardGame
 from ui import UI
 
 def init_music():
-    """Инициализация и запуск фоновой музыки"""
     try:
         pygame.mixer.init()
         pygame.mixer.music.load(MUSIC_FILE)
-        pygame.mixer.music.set_volume(0.5)  # Громкость 50%
-        pygame.mixer.music.play(-1)  # Бесконечное повторение
-        print("Музыка запущена")
+        pygame.mixer.music.set_volume(0.4)
+        pygame.mixer.music.play(-1)
+        print("🎵 Музыка запущена")
     except Exception as e:
-        print(f"Не удалось загрузить музыку: {e}")
-        print("Игра будет без музыки")
+        print(f"⚠️ Не удалось загрузить музыку: {e}")
 
 def main():
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("🎱 Классический пул для двоих")
     
-    # Запуск музыки
     init_music()
     
     game = BilliardGame()
     game.set_screen(screen)
-    game.load_sounds()  # Загрузка звуковых эффектов
+    game.load_sounds()
     
     ui = UI(screen)
     
@@ -52,7 +52,7 @@ def main():
                            (event.button == 3 and game.current_player == 2):
                             dx = pos[0] - cue_ball.x
                             dy = pos[1] - cue_ball.y
-                            if (dx * dx + dy * dy) ** 0.5 <= cue_ball.radius + 10:
+                            if (dx * dx + dy * dy) ** 0.5 <= cue_ball.radius + 15:
                                 game.dragging = True
                                 game.drag_start = (cue_ball.x, cue_ball.y)
                                 game.drag_end = pos
@@ -62,8 +62,8 @@ def main():
                     game.drag_end = pygame.mouse.get_pos()
                     dx = game.drag_start[0] - game.drag_end[0]
                     dy = game.drag_start[1] - game.drag_end[1]
-                    dist = min(((dx * dx + dy * dy) ** 0.5), 150)
-                    game.power = (dist / 150) * 22
+                    dist = min(((dx * dx + dy * dy) ** 0.5), 180)
+                    game.power = (dist / 180) * 25
             
             elif event.type == pygame.MOUSEBUTTONUP:
                 if game.dragging:
@@ -78,7 +78,6 @@ def main():
                     if not game.balls_moving:
                         game.reset_cue_ball()
                 elif event.key == pygame.K_m:
-                    # Вкл/Выкл музыки
                     if pygame.mixer.music.get_busy():
                         pygame.mixer.music.pause()
                     else:
@@ -93,8 +92,10 @@ def main():
         ui.draw_player_panels(game.scores, game.current_player, 
                               game.player1_type, game.player2_type)
         
+        # Тонкая линия направления (при зажатой кнопке)
         if game.dragging and game.drag_start and game.drag_end and not game.balls_moving:
-            ui.draw_aim_line(game.drag_start, game.drag_end)
+            cue_ball = game.get_cue_ball()
+            ui.draw_aim_line(game.drag_start, game.drag_end, cue_ball)
         
         for ball in game.balls:
             ball.draw(screen)
