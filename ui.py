@@ -11,7 +11,7 @@ class UI:
         self.font_tiny = pygame.font.Font(None, 24)
     
     def draw_player_panels(self, scores, current_player, player1_type, player2_type):
-        """Рисует панели игроков ВНЕ стола"""
+        """Панели игроков"""
         
         # ЛЕВАЯ ПАНЕЛЬ - Игрок 1
         panel_width = 240
@@ -24,7 +24,6 @@ class UI:
         if current_player == 1:
             pygame.draw.rect(self.screen, COLORS['GOLD'], panel_rect, 4, 15)
         
-        # Аватар
         pygame.draw.circle(self.screen, COLORS['WHITE'], (panel_x + 45, panel_y + 55), 28)
         text_1 = self.font_medium.render("1", True, (0, 0, 0))
         text_rect_1 = text_1.get_rect(center=(panel_x + 45, panel_y + 55))
@@ -95,12 +94,7 @@ class UI:
         pygame.draw.rect(self.screen, COLORS['LINE'],
                         (TABLE_MARGIN, TABLE_MARGIN, TABLE_WIDTH, TABLE_HEIGHT), 3)
         
-        # Центральная линия
-        pygame.draw.line(self.screen, COLORS['LINE'],
-                        (SCREEN_WIDTH // 2, TABLE_MARGIN),
-                        (SCREEN_WIDTH // 2, SCREEN_HEIGHT - TABLE_MARGIN), 2)
-        
-        # Лузы (увеличенные)
+        # Лузы
         for px, py in POCKETS:
             pygame.draw.circle(self.screen, COLORS['POCKET'], (px, py), POCKET_RADIUS)
             pygame.draw.circle(self.screen, COLORS['POCKET_INNER'], (px, py), POCKET_RADIUS - 10)
@@ -124,37 +118,56 @@ class UI:
         power_text = self.font_tiny.render(f"⚡ СИЛА: {int(power)}", True, COLORS['UI_TEXT'])
         self.screen.blit(power_text, (bar_x + POWER_BAR_WIDTH // 2 - 50, bar_y - 28))
     
-    def draw_aim_line(self, start, end, cue_ball):
-        """Отрисовка ТОНКОЙ линии направления полёта белого шара"""
-        if start and end and cue_ball and not cue_ball.in_pocket:
-            # Основная линия от центра шара до курсора
-            pygame.draw.line(self.screen, COLORS['GOLD'], start, end, 2)
+    def draw_trajectory(self, start, end, cue_ball):
+        """
+        Отрисовка траектории полёта белого шара как на скриншоте Poolians
+        Рисует линию от белого шара до точки прицела и дальше
+        """
+        if not start or not end or not cue_ball or cue_ball.in_pocket:
+            return
+        
+        # Получаем направление удара
+        dx = start[0] - end[0]
+        dy = start[1] - end[1]
+        length = math.sqrt(dx * dx + dy * dy)
+        
+        if length < 5:
+            return
+        
+        dir_x = dx / length
+        dir_y = dy / length
+        
+        # Основная линия от центра шара до курсора
+        pygame.draw.line(self.screen, (255, 255, 180, 200), start, end, 3)
+        
+        # Продолжение линии (траектория после точки прицела)
+        # Рисуем пунктирную линию дальше
+        step = 12
+        max_steps = 50
+        
+        for i in range(1, max_steps):
+            t = i * step
+            x = start[0] - dir_x * t
+            y = start[1] - dir_y * t
             
-            # Тонкая пунктирная линия - предсказание полёта
-            dx = start[0] - end[0]
-            dy = start[1] - end[1]
-            length = math.sqrt(dx*dx + dy*dy)
-            if length > 0:
-                dir_x = dx / length
-                dir_y = dy / length
-                
-                # Рисуем пунктирную линию вперёд (от шара в направлении удара)
-                step = 15
-                for i in range(step, 250, step):
-                    t = i / 100
-                    x = start[0] - dir_x * t * 8
-                    y = start[1] - dir_y * t * 8
-                    
-                    # Останавливаемся у границ стола
-                    if (x < TABLE_MARGIN + BALL_RADIUS or 
-                        x > SCREEN_WIDTH - TABLE_MARGIN - BALL_RADIUS or
-                        y < TABLE_MARGIN + BALL_RADIUS or 
-                        y > SCREEN_HEIGHT - TABLE_MARGIN - BALL_RADIUS):
-                        break
-                    
-                    # Рисуем маленькие точки
-                    if i % 30 < 15:
-                        pygame.draw.circle(self.screen, (255, 255, 100, 200), (int(x), int(y)), 3)
+            # Проверка границ стола
+            if (x < TABLE_MARGIN + BALL_RADIUS or 
+                x > SCREEN_WIDTH - TABLE_MARGIN - BALL_RADIUS or
+                y < TABLE_MARGIN + BALL_RADIUS or 
+                y > SCREEN_HEIGHT - TABLE_MARGIN - BALL_RADIUS):
+                break
+            
+            # Чередование для пунктира
+            if i % 3 == 0:
+                # Яркая точка
+                pygame.draw.circle(self.screen, (255, 255, 200), (int(x), int(y)), 4)
+            else:
+                # Более тусклая точка
+                pygame.draw.circle(self.screen, (200, 200, 150), (int(x), int(y)), 2)
+        
+        # Точка прицела (круг в конце линии мыши)
+        pygame.draw.circle(self.screen, (255, 100, 100), (int(end[0]), int(end[1])), 6)
+        pygame.draw.circle(self.screen, (255, 255, 255), (int(end[0]), int(end[1])), 3)
     
     def draw_game_over(self, winner):
         if winner:
@@ -176,10 +189,11 @@ class UI:
         instr = [
             "🎯 ИГРОК 1: ЛКМ на белом шаре → ТЯНИТЕ → ОТПУСТИТЕ",
             "🎯 ИГРОК 2: ПКМ на белом шаре → ТЯНИТЕ → ОТПУСТИТЕ",
+            "📏 Траектория показывает полёт белого шара",
             "⌨ ПРОБЕЛ - новая игра | R - сброс битка | M - музыка | ESC - выход"
         ]
         
-        y = SCREEN_HEIGHT - 90
+        y = SCREEN_HEIGHT - 110
         for i, line in enumerate(instr):
             text = self.font_tiny.render(line, True, (200, 200, 200))
             x = SCREEN_WIDTH // 2 - text.get_width() // 2
