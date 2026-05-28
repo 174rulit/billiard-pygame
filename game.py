@@ -23,10 +23,6 @@ class BilliardGame:
         self.drag_end = None
         self.power = 0
         
-        # Предварительный просмотр траектории
-        self.trajectory_points = []
-        
-        # Звуки
         self.pocket_sound = None
         self.cue_hit_sound = None
         
@@ -51,39 +47,83 @@ class BilliardGame:
             self.cue_hit_sound.play()
     
     def create_triangle_balls(self):
-        """Создание треугольника как на скриншоте Poolians"""
+        """
+        Создание треугольника из 15 шаров на ПРАВОЙ половине стола
+        Вершина треугольника (шар №1) направлена ВЛЕВО (к белому шару)
+        Ряды: 1, 2, 3, 4, 5 шаров
+        """
         balls = []
         
-        # Треугольник из 15 шаров (5 рядов)
-        # Вершина треугольника направлена в сторону битка
         rows = 5
+        # Вершина треугольника (первый шар, номер 1)
+        tip_x = TRIANGLE_TIP_X
+        tip_y = TRIANGLE_TIP_Y
         
-        # Начальная позиция (вершина треугольника)
-        # Верхний шар треугольника находится ближе к битку
-        start_x = TRIANGLE_BASE_X
-        start_y = TRIANGLE_BASE_Y
+        # Угол наклона для равностороннего треугольника
+        # В классическом пуле треугольник расширяется вправо и вниз/вверх
+        # Но вершина смотрит влево, поэтому ряды идут вправо
         
         ball_index = 1
         for row in range(rows):
             balls_in_row = row + 1
-            # Смещение по X для центрирования ряда
-            row_start_x = start_x - (balls_in_row - 1) * BALL_DISTANCE / 2
+            # Ширина ряда = (balls_in_row - 1) * BALL_DISTANCE
+            # Начальная X для этого ряда (сдвиг вправо от вершины)
+            row_start_x = tip_x + row * (BALL_DISTANCE * 0.866)  # Угол 60 градусов
             
-            # Y координата: увеличивается с каждым рядом
-            y = start_y + row * (BALL_DISTANCE * 0.866)  # sin(60°) ≈ 0.866
+            # Y координата: центрируем треугольник по вертикали
+            # Вершина в центре, остальные ряды выше и ниже
+            row_height = (balls_in_row - 1) * BALL_DISTANCE / 2
+            row_start_y = tip_y - row_height
             
             for col in range(balls_in_row):
-                x = row_start_x + col * BALL_DISTANCE
+                x = row_start_x
+                y = row_start_y + col * BALL_DISTANCE
+                
+                # Номер шара
+                if ball_index == 8:
+                    ball_type = 'black'
+                    color = COLOR_BALLS[8]
+                elif ball_index <= 7:
+                    ball_type = 'solid'
+                    color = COLOR_BALLS[ball_index]
+                else:
+                    ball_type = 'stripe'
+                    color = COLOR_BALLS[ball_index]
+                
+                balls.append(Ball(x, y, color, number=ball_index, ball_type=ball_type))
+                ball_index += 1
+        
+        # Альтернативная, более правильная расстановка треугольника
+        # Пересоздаём с правильной геометрией
+        balls = []
+        ball_index = 1
+        
+        # Треугольник: 5 рядов
+        # Ряд 1: 1 шар (x=tip_x, y=tip_y)
+        # Ряд 2: 2 шара (x=tip_x + dist, y=tip_y ± dist/2)
+        # Ряд 3: 3 шара (x=tip_x + 2*dist, y=tip_y ± dist, tip_y)
+        # и так далее
+        
+        for row in range(5):
+            balls_in_row = row + 1
+            offset_x = row * BALL_DISTANCE
+            
+            # Начальная Y для этого ряда (центрируем)
+            start_y = tip_y - (balls_in_row - 1) * BALL_DISTANCE / 2
+            
+            for col in range(balls_in_row):
+                x = tip_x + offset_x
+                y = start_y + col * BALL_DISTANCE
                 
                 if ball_index == 8:
                     ball_type = 'black'
-                    color = COLORS['BLACK']
+                    color = COLOR_BALLS[8]
                 elif ball_index <= 7:
                     ball_type = 'solid'
-                    color = COLOR_BALLS[ball_index - 1]
+                    color = COLOR_BALLS[ball_index]
                 else:
                     ball_type = 'stripe'
-                    color = COLOR_BALLS[ball_index - 1]
+                    color = COLOR_BALLS[ball_index]
                 
                 balls.append(Ball(x, y, color, number=ball_index, ball_type=ball_type))
                 ball_index += 1
@@ -101,7 +141,7 @@ class BilliardGame:
         self.player2_type = None
         self.black_pocketed = False
         
-        # БИТОК (белый шар) - на противоположной стороне от треугольника
+        # БЕЛЫЙ ШАР - на ЛЕВОЙ половине, напротив вершины треугольника
         cue_ball = Ball(
             CUE_BALL_X,
             CUE_BALL_Y,
@@ -113,7 +153,7 @@ class BilliardGame:
         cue_ball.is_cue = True
         self.balls.append(cue_ball)
         
-        # Треугольник цветных шаров
+        # ТРЕУГОЛЬНИК - на ПРАВОЙ половине
         self.balls.extend(self.create_triangle_balls())
     
     def get_cue_ball(self):
@@ -225,8 +265,17 @@ class BilliardGame:
         if not cue_ball:
             return False
         
-        fx, fy, power = Physics.calculate_shoot_direction(start_pos, end_pos)
-        if power > 0:
+        # Направление от мыши к шару (удар в сторону отведения)
+        fx = start_pos[0] - end_pos[0]
+        fy = start_pos[1] - end_pos[1]
+        length = math.sqrt(fx*fx + fy*fy)
+        if length > 0:
+            fx /= length
+            fy /= length
+        
+        power = min((length / 180) * 25, 25)
+        
+        if power > 3:
             cue_ball.apply_force(fx, fy, power)
             self.balls_moving = True
             self.play_cue_hit_sound()
