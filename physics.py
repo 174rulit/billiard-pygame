@@ -82,12 +82,12 @@ class Physics:
         dx = start_pos[0] - end_pos[0]
         dy = start_pos[1] - end_pos[1]
         distance = math.sqrt(dx * dx + dy * dy)
-        max_dist = 150
+        max_dist = 180
         distance = min(distance, max_dist)
         
-        power = (distance / max_dist) * 22
+        power = (distance / max_dist) * 25
         
-        if distance > 10:
+        if distance > 15:
             fx = dx / distance
             fy = dy / distance
             return fx, fy, power
