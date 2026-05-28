@@ -1,7 +1,6 @@
-#
 """
 Классический пул для двоих на Pygame
-Один биток, треугольник из 15 шаров, игра по очереди
+С музыкой, звуками и улучшенным интерфейсом
 """
 
 import pygame
@@ -10,12 +9,30 @@ from config import *
 from game import BilliardGame
 from ui import UI
 
+def init_music():
+    """Инициализация и запуск фоновой музыки"""
+    try:
+        pygame.mixer.init()
+        pygame.mixer.music.load(MUSIC_FILE)
+        pygame.mixer.music.set_volume(0.5)  # Громкость 50%
+        pygame.mixer.music.play(-1)  # Бесконечное повторение
+        print("Музыка запущена")
+    except Exception as e:
+        print(f"Не удалось загрузить музыку: {e}")
+        print("Игра будет без музыки")
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("🎱 Классический пул для двоих")
     
+    # Запуск музыки
+    init_music()
+    
     game = BilliardGame()
+    game.set_screen(screen)
+    game.load_sounds()  # Загрузка звуковых эффектов
+    
     ui = UI(screen)
     
     clock = pygame.time.Clock()
@@ -31,10 +48,8 @@ def main():
                     cue_ball = game.get_cue_ball()
                     if cue_ball and not cue_ball.in_pocket:
                         pos = pygame.mouse.get_pos()
-                        # Игрок 1 - ЛКМ, Игрок 2 - ПКМ
                         if (event.button == 1 and game.current_player == 1) or \
                            (event.button == 3 and game.current_player == 2):
-                            # Проверка клика по битку
                             dx = pos[0] - cue_ball.x
                             dy = pos[1] - cue_ball.y
                             if (dx * dx + dy * dy) ** 0.5 <= cue_ball.radius + 10:
@@ -62,6 +77,12 @@ def main():
                 elif event.key == pygame.K_r:
                     if not game.balls_moving:
                         game.reset_cue_ball()
+                elif event.key == pygame.K_m:
+                    # Вкл/Выкл музыки
+                    if pygame.mixer.music.get_busy():
+                        pygame.mixer.music.pause()
+                    else:
+                        pygame.mixer.music.unpause()
                 elif event.key == pygame.K_ESCAPE:
                     running = False
         
@@ -69,16 +90,14 @@ def main():
         
         # Отрисовка
         ui.draw_table()
+        ui.draw_player_panels(game.scores, game.current_player, 
+                              game.player1_type, game.player2_type)
         
         if game.dragging and game.drag_start and game.drag_end and not game.balls_moving:
             ui.draw_aim_line(game.drag_start, game.drag_end)
         
         for ball in game.balls:
             ball.draw(screen)
-        
-        ui.draw_scores(game.scores, game.current_player, 
-                      game.player1_type, game.player2_type)
-        ui.draw_turn_indicator(game.current_player)
         
         if game.dragging and game.power > 0:
             ui.draw_power_bar(game.power)
