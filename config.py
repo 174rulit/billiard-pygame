@@ -1,17 +1,22 @@
-#
 """
 Конфигурация игры - все магические числа вынесены сюда
 Принципы: DRY, отсутствие magic constants
 """
 
+import os
+
 # Размеры окна
-SCREEN_WIDTH = 1200
-SCREEN_HEIGHT = 700
-TABLE_MARGIN = 50
+SCREEN_WIDTH = 1300
+SCREEN_HEIGHT = 800
+TABLE_MARGIN = 60
 
 # Размеры стола
 TABLE_WIDTH = SCREEN_WIDTH - TABLE_MARGIN * 2
 TABLE_HEIGHT = SCREEN_HEIGHT - TABLE_MARGIN * 2
+
+# Панели для информации об игроках (вне стола)
+PLAYER_PANEL_HEIGHT = 100
+PLAYER_PANEL_Y = 20
 
 # Цвета (RGB)
 COLORS = {
@@ -37,8 +42,11 @@ COLORS = {
     'DARK_GREEN': (0, 100, 0),
     'NAVY': (0, 0, 128),
     'GOLD': (255, 215, 0),
+    'BLACK': (0, 0, 0),
     'UI_BG': (0, 0, 0, 180),
     'UI_TEXT': (255, 215, 0),
+    'PLAYER1_BG': (50, 50, 80, 200),
+    'PLAYER2_BG': (80, 50, 50, 200),
 }
 
 # Физические параметры
@@ -46,10 +54,10 @@ BALL_RADIUS = 10
 FRICTION = 0.985
 WALL_BOUNCE_DAMP = 0.95
 MAX_POWER = 22
-POWER_BAR_WIDTH = 200
-POWER_BAR_HEIGHT = 20
+POWER_BAR_WIDTH = 250
+POWER_BAR_HEIGHT = 25
 
-# Лузы (координаты)
+# Лузы (координаты) - УВЕЛИЧЕННЫЙ РАДИУС
 POCKETS = [
     (TABLE_MARGIN, TABLE_MARGIN),  # левый верх
     (SCREEN_WIDTH - TABLE_MARGIN, TABLE_MARGIN),  # правый верх
@@ -58,14 +66,13 @@ POCKETS = [
     (SCREEN_WIDTH // 2, TABLE_MARGIN),  # центр верх
     (SCREEN_WIDTH // 2, SCREEN_HEIGHT - TABLE_MARGIN),  # центр низ
 ]
-POCKET_RADIUS = 16
+POCKET_RADIUS = 22  # УВЕЛИЧЕНО с 16 до 22
 
 # Игровые параметры
 WIN_SCORE = 7
-NUM_COLOR_BALLS = 15  # 15 цветных шаров (классический пул)
+NUM_COLOR_BALLS = 15
 
-# Цвета для 15 шаров (классическая нумерация)
-# 1-7: сплошные, 9-15: полосатые
+# Цвета для 15 шаров
 COLOR_BALLS = [
     COLORS['YELLOW'],   # 1
     COLORS['BLUE'],     # 2
@@ -74,7 +81,7 @@ COLOR_BALLS = [
     COLORS['ORANGE'],   # 5
     COLORS['GREEN'],    # 6
     COLORS['MAROON'],   # 7
-    COLORS['BLACK'],    # 8 (черный)
+    COLORS['BLACK'],    # 8
     (255, 180, 180),    # 9
     (180, 180, 255),    # 10
     (180, 255, 180),    # 11
@@ -85,12 +92,17 @@ COLOR_BALLS = [
 ]
 
 # Координаты для треугольной расстановки
-# Центр треугольника (где стоит первый шар)
 TRIANGLE_CENTER_X = SCREEN_WIDTH // 2 + 30
 TRIANGLE_CENTER_Y = SCREEN_HEIGHT // 2
 
-# Позиция битка (белый шар) - внизу
+# Позиция битка (белый шар)
 CUE_BALL_X = SCREEN_WIDTH // 2
-CUE_BALL_Y = SCREEN_HEIGHT - TABLE_MARGIN - 60
+CUE_BALL_Y = SCREEN_HEIGHT - TABLE_MARGIN - 80
+
+# Пути к звуковым файлам (создайте папку sounds)
+SOUNDS_DIR = "sounds"
+MUSIC_FILE = os.path.join(SOUNDS_DIR, "background_music.mp3")
+POCKET_SOUND_FILE = os.path.join(SOUNDS_DIR, "pocket.mp3")
+CUE_HIT_SOUND_FILE = os.path.join(SOUNDS_DIR, "cue_hit.mp3")
 
 FPS = 60
