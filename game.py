@@ -1,4 +1,3 @@
-#
 import pygame
 import math
 from config import *
@@ -6,13 +5,8 @@ from ball import Ball
 from physics import Physics
 
 class BilliardGame:
-    """Классический пул: один биток, треугольник цветных шаров"""
-    
     def __init__(self):
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        pygame.display.set_caption("🎱 Классический пул для двоих")
-        self.clock = pygame.time.Clock()
-        
+        self.screen = None
         self.balls = []
         self.scores = {1: 0, 2: 0}
         self.current_player = 1
@@ -20,24 +14,44 @@ class BilliardGame:
         self.winner = None
         self.balls_moving = False
         
-        # Типы шаров, которые выбрал игрок
-        self.player1_type = None  # 'solid' или 'stripe'
+        self.player1_type = None
         self.player2_type = None
         self.black_pocketed = False
         
-        # Управление ударом
         self.dragging = False
         self.drag_start = None
         self.drag_end = None
         self.power = 0
         
+        # Звуки
+        self.pocket_sound = None
+        self.cue_hit_sound = None
+        
         self.init_game()
     
+    def set_screen(self, screen):
+        self.screen = screen
+    
+    def load_sounds(self):
+        """Загрузка звуковых эффектов"""
+        try:
+            self.pocket_sound = pygame.mixer.Sound(POCKET_SOUND_FILE)
+            self.cue_hit_sound = pygame.mixer.Sound(CUE_HIT_SOUND_FILE)
+        except Exception as e:
+            print(f"Не удалось загрузить звуки: {e}")
+            self.pocket_sound = None
+            self.cue_hit_sound = None
+    
+    def play_pocket_sound(self):
+        if self.pocket_sound:
+            self.pocket_sound.play()
+    
+    def play_cue_hit_sound(self):
+        if self.cue_hit_sound:
+            self.cue_hit_sound.play()
+    
     def create_triangle_balls(self):
-        """Создание треугольной расстановки шаров"""
         balls = []
-        
-        # Треугольная расстановка (15 шаров)
         rows = 5
         start_x = TRIANGLE_CENTER_X
         start_y = TRIANGLE_CENTER_Y - (rows - 1) * (BALL_RADIUS * 1.8) / 2
@@ -50,7 +64,6 @@ class BilliardGame:
             for col in range(row + 1):
                 x = start_x + offset_x + col * (BALL_RADIUS * 1.8)
                 
-                # 8-й шар (черный) в центре треугольника
                 if ball_index == 8:
                     ball_type = 'black'
                     color = COLORS['BLACK']
@@ -67,7 +80,6 @@ class BilliardGame:
         return balls
     
     def init_game(self):
-        """Инициализация новой игры"""
         self.balls.clear()
         self.scores = {1: 0, 2: 0}
         self.current_player = 1
@@ -78,7 +90,6 @@ class BilliardGame:
         self.player2_type = None
         self.black_pocketed = False
         
-        # БИТОК (один белый шар) - общий для обоих игроков
         cue_ball = Ball(
             CUE_BALL_X,
             CUE_BALL_Y,
@@ -89,24 +100,19 @@ class BilliardGame:
         )
         cue_ball.is_cue = True
         self.balls.append(cue_ball)
-        
-        # Треугольник цветных шаров
         self.balls.extend(self.create_triangle_balls())
     
     def get_cue_ball(self):
-        """Получить биток"""
         for ball in self.balls:
             if ball.is_cue and not ball.in_pocket:
                 return ball
         return None
     
     def get_remaining_balls_by_type(self, ball_type):
-        """Получить оставшиеся шары определённого типа"""
         return [b for b in self.balls 
                 if not b.in_pocket and b.ball_type == ball_type and b.number != 8]
     
     def assign_player_types(self, pocketed_ball):
-        """Назначить игрокам типы шаров после первого забитого"""
         if pocketed_ball.ball_type == 'solid':
             if self.player1_type is None:
                 self.player1_type = 'solid'
@@ -123,10 +129,10 @@ class BilliardGame:
                 self.player1_type = 'solid'
     
     def handle_pocket(self, ball):
-        """Обработка попадания шара в лузу"""
+        """Обработка попадания в лузу с воспроизведением звука"""
+        self.play_pocket_sound()  # Звук при попадании
+        
         if ball.ball_type == 'cue':
-            # Биток забит - штраф, ход переходит
-            # Переставляем биток в начальную позицию
             ball.x = CUE_BALL_X
             ball.y = CUE_BALL_Y
             ball.vx = 0
@@ -135,29 +141,23 @@ class BilliardGame:
             return 'foul'
         
         elif ball.ball_type == 'black':
-            # Чёрный шар
             self.black_pocketed = True
-            # Проверка, может ли игрок забивать чёрный
             my_type = self.player1_type if self.current_player == 1 else self.player2_type
             my_balls_left = len(self.get_remaining_balls_by_type(my_type))
             
             if my_balls_left == 0:
-                # Победа
                 self.winner = self.current_player
                 self.game_active = False
                 return 'win'
             else:
-                # Забил чёрный раньше времени - поражение
                 self.winner = 3 - self.current_player
                 self.game_active = False
                 return 'loss'
         
         elif ball.ball_type in ['solid', 'stripe']:
-            # Назначение типов при первом забитом шаре
             if self.player1_type is None and self.player2_type is None:
                 self.assign_player_types(ball)
             
-            # Проверка, свой ли это шар
             my_type = self.player1_type if self.current_player == 1 else self.player2_type
             
             if ball.ball_type == my_type:
@@ -169,27 +169,22 @@ class BilliardGame:
         return 'good'
     
     def update_physics(self):
-        """Обновление физики и обработка забитых шаров"""
         any_moving = False
         
-        # Обновляем позиции шаров
         for ball in self.balls:
             if not ball.in_pocket:
                 ball.update()
                 Physics.check_wall_collision(ball, TABLE_MARGIN)
                 
-                # Проверка луз
-                if Physics.check_pocket_collision(ball, POCKETS, POCKET_RADIUS):
+                in_pocket, pocket_pos = Physics.check_pocket_collision(ball, POCKETS, POCKET_RADIUS)
+                if in_pocket:
                     result = self.handle_pocket(ball)
-                    
-                    # Если чёрный забит неправильно или фол, игра может закончиться
                     if result == 'win' or result == 'loss':
                         self.game_active = False
                 
                 if not ball.is_stopped():
                     any_moving = True
         
-        # Столкновения между шарами
         for i in range(len(self.balls)):
             for j in range(i + 1, len(self.balls)):
                 if not self.balls[i].in_pocket and not self.balls[j].in_pocket:
@@ -200,19 +195,16 @@ class BilliardGame:
         
         self.balls_moving = any_moving
         
-        # Смена игрока когда всё остановилось (если не было продолжения хода)
         if not any_moving and self.game_active and not self.winner:
             self.switch_player()
     
     def switch_player(self):
-        """Смена игрока"""
         if self.current_player == 1:
             self.current_player = 2
         else:
             self.current_player = 1
     
     def shoot(self, start_pos, end_pos):
-        """Выполнить удар по битку"""
         if self.balls_moving or not self.game_active or self.winner:
             return False
         
@@ -224,11 +216,11 @@ class BilliardGame:
         if power > 0:
             cue_ball.apply_force(fx, fy, power)
             self.balls_moving = True
+            self.play_cue_hit_sound()  # Звук удара по битку
             return True
         return False
     
     def reset_cue_ball(self):
-        """Сбросить биток в начальную позицию (после фола)"""
         cue_ball = self.get_cue_ball()
         if cue_ball:
             cue_ball.x = CUE_BALL_X
@@ -238,5 +230,4 @@ class BilliardGame:
             cue_ball.in_pocket = False
     
     def new_game(self):
-        """Полностью новая игра"""
         self.init_game()
