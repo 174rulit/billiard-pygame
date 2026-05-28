@@ -1,13 +1,9 @@
-#
 import math
 from config import TABLE_MARGIN, SCREEN_WIDTH, SCREEN_HEIGHT, WALL_BOUNCE_DAMP
 
 class Physics:
-    """Класс для физических расчетов"""
-    
     @staticmethod
     def check_wall_collision(ball, margin):
-        """Проверка столкновения со стенами"""
         left = margin + ball.radius
         right = SCREEN_WIDTH - margin - ball.radius
         top = margin + ball.radius
@@ -36,7 +32,6 @@ class Physics:
     
     @staticmethod
     def resolve_ball_collision(b1, b2):
-        """Разрешение столкновения двух шаров"""
         dx = b2.x - b1.x
         dy = b2.y - b1.y
         distance = math.sqrt(dx * dx + dy * dy)
@@ -72,7 +67,6 @@ class Physics:
     
     @staticmethod
     def check_pocket_collision(ball, pockets, pocket_radius):
-        """Проверка попадания в лузу"""
         for px, py in pockets:
             dx = ball.x - px
             dy = ball.y - py
@@ -80,12 +74,11 @@ class Physics:
             if dist < pocket_radius:
                 if not ball.in_pocket:
                     ball.in_pocket = True
-                    return True
-        return False
+                    return True, (px, py)
+        return False, None
     
     @staticmethod
     def calculate_shoot_direction(start_pos, end_pos):
-        """Расчет направления и силы удара"""
         dx = start_pos[0] - end_pos[0]
         dy = start_pos[1] - end_pos[1]
         distance = math.sqrt(dx * dx + dy * dy)
