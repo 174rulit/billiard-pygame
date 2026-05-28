@@ -33,7 +33,6 @@ class BilliardGame:
         self.screen = screen
     
     def load_sounds(self):
-        """Загрузка звуковых эффектов"""
         try:
             self.pocket_sound = pygame.mixer.Sound(POCKET_SOUND_FILE)
             self.cue_hit_sound = pygame.mixer.Sound(CUE_HIT_SOUND_FILE)
@@ -51,18 +50,33 @@ class BilliardGame:
             self.cue_hit_sound.play()
     
     def create_triangle_balls(self):
+        """Создание РАВНОСТОРОННЕГО треугольника из 15 шаров"""
         balls = []
+        
+        # Равносторонний треугольник:
+        # Ряд 1: 1 шар
+        # Ряд 2: 2 шара
+        # Ряд 3: 3 шара
+        # Ряд 4: 4 шара
+        # Ряд 5: 5 шаров
         rows = 5
         start_x = TRIANGLE_CENTER_X
-        start_y = TRIANGLE_CENTER_Y - (rows - 1) * (BALL_RADIUS * 1.8) / 2
+        start_y = TRIANGLE_CENTER_Y
         
         ball_index = 1
         for row in range(rows):
-            y = start_y + row * (BALL_RADIUS * 1.8)
-            offset_x = row * (BALL_RADIUS * 1.7)
+            # Количество шаров в ряду = row + 1
+            balls_in_row = row + 1
+            # Ширина ряда = (balls_in_row - 1) * BALL_DISTANCE
+            row_width = (balls_in_row - 1) * BALL_DISTANCE
+            # Начальная X координата ряда (центрируем)
+            row_start_x = start_x - row_width / 2
             
-            for col in range(row + 1):
-                x = start_x + offset_x + col * (BALL_RADIUS * 1.8)
+            # Y координата ряда (вершина треугольника вверху)
+            y = start_y + row * (BALL_DISTANCE * math.sqrt(3) / 2)
+            
+            for col in range(balls_in_row):
+                x = row_start_x + col * BALL_DISTANCE
                 
                 if ball_index == 8:
                     ball_type = 'black'
@@ -90,6 +104,7 @@ class BilliardGame:
         self.player2_type = None
         self.black_pocketed = False
         
+        # БИТОК (белый шар) - на нижней половине стола по центру
         cue_ball = Ball(
             CUE_BALL_X,
             CUE_BALL_Y,
@@ -100,6 +115,8 @@ class BilliardGame:
         )
         cue_ball.is_cue = True
         self.balls.append(cue_ball)
+        
+        # Треугольник цветных шаров (на верхней половине)
         self.balls.extend(self.create_triangle_balls())
     
     def get_cue_ball(self):
@@ -129,8 +146,7 @@ class BilliardGame:
                 self.player1_type = 'solid'
     
     def handle_pocket(self, ball):
-        """Обработка попадания в лузу с воспроизведением звука"""
-        self.play_pocket_sound()  # Звук при попадании
+        self.play_pocket_sound()
         
         if ball.ball_type == 'cue':
             ball.x = CUE_BALL_X
@@ -216,7 +232,7 @@ class BilliardGame:
         if power > 0:
             cue_ball.apply_force(fx, fy, power)
             self.balls_moving = True
-            self.play_cue_hit_sound()  # Звук удара по битку
+            self.play_cue_hit_sound()
             return True
         return False
     
