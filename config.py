@@ -1,9 +1,9 @@
 """
 Конфигурация игры - все магические числа вынесены сюда
-Принципы: DRY, отсутствие magic constants
 """
 
 import os
+import math
 
 # Размеры окна
 SCREEN_WIDTH = 1400
@@ -46,14 +46,14 @@ COLORS = {
 }
 
 # Физические параметры
-BALL_RADIUS = 14          # УВЕЛИЧЕНО с 10 до 14
+BALL_RADIUS = 14
 FRICTION = 0.985
 WALL_BOUNCE_DAMP = 0.95
 MAX_POWER = 25
 POWER_BAR_WIDTH = 250
 POWER_BAR_HEIGHT = 25
 
-# Лузы (координаты) - УВЕЛИЧЕННЫЙ РАДИУС
+# Лузы (координаты)
 POCKETS = [
     (TABLE_MARGIN, TABLE_MARGIN),
     (SCREEN_WIDTH - TABLE_MARGIN, TABLE_MARGIN),
@@ -62,13 +62,13 @@ POCKETS = [
     (SCREEN_WIDTH // 2, TABLE_MARGIN),
     (SCREEN_WIDTH // 2, SCREEN_HEIGHT - TABLE_MARGIN),
 ]
-POCKET_RADIUS = 28        # УВЕЛИЧЕНО с 22 до 28
+POCKET_RADIUS = 28
 
 # Игровые параметры
 WIN_SCORE = 7
 NUM_COLOR_BALLS = 15
 
-# Цвета для 15 шаров
+# Цвета для 15 шаров (как в классическом пуле)
 COLOR_BALLS = [
     COLORS['YELLOW'],   # 1
     COLORS['BLUE'],     # 2
@@ -78,31 +78,37 @@ COLOR_BALLS = [
     COLORS['GREEN'],    # 6
     COLORS['MAROON'],   # 7
     COLORS['BLACK'],    # 8
-    (255, 180, 180),    # 9
-    (180, 180, 255),    # 10
-    (180, 255, 180),    # 11
-    (255, 180, 255),    # 12
-    (180, 255, 255),    # 13
-    (255, 255, 180),    # 14
-    (200, 150, 255),    # 15
+    (255, 180, 180),    # 9 (жёлтый полосатый)
+    (180, 180, 255),    # 10 (синий полосатый)
+    (180, 255, 180),    # 11 (красный полосатый)
+    (255, 180, 255),    # 12 (фиолетовый полосатый)
+    (180, 255, 255),    # 13 (оранжевый полосатый)
+    (255, 255, 180),    # 14 (зелёный полосатый)
+    (200, 150, 255),    # 15 (бордовый полосатый)
 ]
 
-# РАВНОСТОРОННИЙ ТРЕУГОЛЬНИК
-# Расстояние между центрами шаров (диаметр + небольшой зазор)
+# РАССТАНОВКА КАК НА СКРИНШОТЕ POOLIANS
+# Треугольник внизу справа (или внизу)
+# Расстояние между центрами шаров
 BALL_DISTANCE = BALL_RADIUS * 2 + 2
 
-# Центр треугольника (для цветных шаров) - на ВЕРХНЕЙ половине стола
-TRIANGLE_CENTER_X = SCREEN_WIDTH // 2
-TRIANGLE_CENTER_Y = TABLE_MARGIN + TABLE_HEIGHT // 3
+# Треугольник располагается внизу стола (ближе к игроку)
+# Как на скриншоте - треугольник в нижней части
+TRIANGLE_BASE_X = SCREEN_WIDTH - TABLE_MARGIN - 150  # Смещён вправо
+TRIANGLE_BASE_Y = SCREEN_HEIGHT - TABLE_MARGIN - 100  # Внизу
 
-# Позиция битка (белый шар) - в НИЖНЕЙ половине стола по центру
-CUE_BALL_X = SCREEN_WIDTH // 2
-CUE_BALL_Y = SCREEN_HEIGHT - TABLE_MARGIN - 100
+# БЕЛЫЙ ШАР (биток) - на противоположной стороне (вверху слева для разнообразия)
+# Как на скриншоте - биток может быть вверху или слева
+CUE_BALL_X = TABLE_MARGIN + 120
+CUE_BALL_Y = TABLE_MARGIN + 80
 
-# Пути к звуковым файлам
+# Можно также вариант: белый внизу, треугольник вверху (раскомментировать при желании)
+# Но по скриншоту Poolians - биток часто вверху
+
+FPS = 60
+
+# Пути к звукам
 SOUNDS_DIR = "sounds"
 MUSIC_FILE = os.path.join(SOUNDS_DIR, "background_music.mp3")
 POCKET_SOUND_FILE = os.path.join(SOUNDS_DIR, "pocket.mp3")
 CUE_HIT_SOUND_FILE = os.path.join(SOUNDS_DIR, "cue_hit.mp3")
-
-FPS = 60
