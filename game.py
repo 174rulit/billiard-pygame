@@ -23,6 +23,9 @@ class BilliardGame:
         self.drag_end = None
         self.power = 0
         
+        # Предварительный просмотр траектории
+        self.trajectory_points = []
+        
         # Звуки
         self.pocket_sound = None
         self.cue_hit_sound = None
@@ -38,8 +41,6 @@ class BilliardGame:
             self.cue_hit_sound = pygame.mixer.Sound(CUE_HIT_SOUND_FILE)
         except Exception as e:
             print(f"Не удалось загрузить звуки: {e}")
-            self.pocket_sound = None
-            self.cue_hit_sound = None
     
     def play_pocket_sound(self):
         if self.pocket_sound:
@@ -50,30 +51,26 @@ class BilliardGame:
             self.cue_hit_sound.play()
     
     def create_triangle_balls(self):
-        """Создание РАВНОСТОРОННЕГО треугольника из 15 шаров"""
+        """Создание треугольника как на скриншоте Poolians"""
         balls = []
         
-        # Равносторонний треугольник:
-        # Ряд 1: 1 шар
-        # Ряд 2: 2 шара
-        # Ряд 3: 3 шара
-        # Ряд 4: 4 шара
-        # Ряд 5: 5 шаров
+        # Треугольник из 15 шаров (5 рядов)
+        # Вершина треугольника направлена в сторону битка
         rows = 5
-        start_x = TRIANGLE_CENTER_X
-        start_y = TRIANGLE_CENTER_Y
+        
+        # Начальная позиция (вершина треугольника)
+        # Верхний шар треугольника находится ближе к битку
+        start_x = TRIANGLE_BASE_X
+        start_y = TRIANGLE_BASE_Y
         
         ball_index = 1
         for row in range(rows):
-            # Количество шаров в ряду = row + 1
             balls_in_row = row + 1
-            # Ширина ряда = (balls_in_row - 1) * BALL_DISTANCE
-            row_width = (balls_in_row - 1) * BALL_DISTANCE
-            # Начальная X координата ряда (центрируем)
-            row_start_x = start_x - row_width / 2
+            # Смещение по X для центрирования ряда
+            row_start_x = start_x - (balls_in_row - 1) * BALL_DISTANCE / 2
             
-            # Y координата ряда (вершина треугольника вверху)
-            y = start_y + row * (BALL_DISTANCE * math.sqrt(3) / 2)
+            # Y координата: увеличивается с каждым рядом
+            y = start_y + row * (BALL_DISTANCE * 0.866)  # sin(60°) ≈ 0.866
             
             for col in range(balls_in_row):
                 x = row_start_x + col * BALL_DISTANCE
@@ -104,7 +101,7 @@ class BilliardGame:
         self.player2_type = None
         self.black_pocketed = False
         
-        # БИТОК (белый шар) - на нижней половине стола по центру
+        # БИТОК (белый шар) - на противоположной стороне от треугольника
         cue_ball = Ball(
             CUE_BALL_X,
             CUE_BALL_Y,
@@ -116,7 +113,7 @@ class BilliardGame:
         cue_ball.is_cue = True
         self.balls.append(cue_ball)
         
-        # Треугольник цветных шаров (на верхней половине)
+        # Треугольник цветных шаров
         self.balls.extend(self.create_triangle_balls())
     
     def get_cue_ball(self):
