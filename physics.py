@@ -1,4 +1,4 @@
-
+#
 import math
 from config import TABLE_MARGIN, SCREEN_WIDTH, SCREEN_HEIGHT, WALL_BOUNCE_DAMP
 
