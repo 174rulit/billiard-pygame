@@ -1,4 +1,4 @@
-#
+
 import math
 import pygame
 from config import BALL_RADIUS, COLORS
