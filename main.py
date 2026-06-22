@@ -23,7 +23,6 @@ def main():
     
     init_music()
     
-    # Состояния
     STATE_MENU = 0
     STATE_GUESS = 1
     STATE_GAME = 2
@@ -51,11 +50,9 @@ def main():
                     state = STATE_GUESS
             
             elif state == STATE_GUESS:
-                # Проверка клика по кнопке "Начать игру"
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if guess_game.game_completed and guess_game.button_rect:
                         if guess_game.button_rect.collidepoint(event.pos):
-                            # Создаём игру с победителем в качестве первого игрока
                             winner = guess_game.get_winner()
                             player1_name = guess_game.player1_name
                             player2_name = guess_game.player2_name
@@ -63,9 +60,7 @@ def main():
                             game = BilliardGame(player1_name, player2_name)
                             game.load_sounds()
                             
-                            # Устанавливаем первого игрока (победитель мини-игры)
                             if winner == 2:
-                                # Меняем игроков местами, чтобы победитель был первым
                                 game.current_player = 2
                                 game.player1_name = player2_name
                                 game.player2_name = player1_name
@@ -75,7 +70,6 @@ def main():
                 guess_game.handle_event(event)
             
             elif state == STATE_GAME:
-                # Обработка игры
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1 and not game.balls_moving and game.game_active and not game.winner:
                         cue_ball = game.get_cue_ball()
@@ -127,10 +121,8 @@ def main():
             guess_game.draw(screen)
         
         elif state == STATE_GAME:
-            # Обновление игры
             game.update_physics()
             
-            # Отрисовка игры
             ui.draw_table(screen)
             ui.draw_player_panels(screen, game)
             
