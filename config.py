@@ -5,8 +5,8 @@
 import os
 
 # Размеры окна
-SCREEN_WIDTH = 1400
-SCREEN_HEIGHT = 850
+SCREEN_WIDTH = 1500
+SCREEN_HEIGHT = 950
 TABLE_MARGIN = 70
 
 # Размеры стола
