@@ -5,6 +5,7 @@ from game import BilliardGame
 from ui import UI
 from menu import Menu
 from guess_game import GuessGame
+from background import AnimatedBackground
 
 def init_music():
     try:
@@ -19,9 +20,12 @@ def init_music():
 def main():
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("🎱 Бильярд 2D")
+    pygame.display.set_caption("Бильярд 2D")
     
     init_music()
+    
+    # Создаём анимированный фон
+    background = AnimatedBackground()
     
     STATE_MENU = 0
     STATE_GUESS = 1
@@ -38,6 +42,9 @@ def main():
     running = True
     
     while running:
+        # Обновляем анимацию фона (только визуально, не влияет на игру)
+        background.update()
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -61,9 +68,14 @@ def main():
                             game.load_sounds()
                             
                             if winner == 2:
-                                game.current_player = 2
-                                game.player1_name = player2_name
-                                game.player2_name = player1_name
+                                # Победил Игрок 1 → он остаётся первым
+                                game = BilliardGame(player1_name, player2_name)
+                                game.current_player = 1
+                            else:
+                                # Победил Игрок 2 → он становится Игроком 1
+                                game = BilliardGame(player2_name, player1_name)
+                                game.current_player = 1
+                                
                             
                             state = STATE_GAME
                 
@@ -111,7 +123,11 @@ def main():
                     elif event.key == pygame.K_ESCAPE:
                         running = False
         
-        # Отрисовка
+        # === ОТРИСОВКА ===
+        
+        # 1. Анимированный фон (всегда рисуется первым)
+        background.draw(screen)
+        
         if state == STATE_MENU:
             menu.update()
             menu.draw(screen)
@@ -121,8 +137,10 @@ def main():
             guess_game.draw(screen)
         
         elif state == STATE_GAME:
+            # === ВАЖНО: обновляем физику игры ===
             game.update_physics()
             
+            # Отрисовка игры
             ui.draw_table(screen)
             ui.draw_player_panels(screen, game)
             
