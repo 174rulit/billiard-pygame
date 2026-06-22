@@ -1,4 +1,3 @@
-
 import math
 from config import TABLE_MARGIN, SCREEN_WIDTH, SCREEN_HEIGHT, WALL_BOUNCE_DAMP
 
@@ -77,19 +76,3 @@ class Physics:
                     ball.in_pocket = True
                     return True, (px, py)
         return False, None
-    
-    @staticmethod
-    def calculate_shoot_direction(start_pos, end_pos):
-        dx = start_pos[0] - end_pos[0]
-        dy = start_pos[1] - end_pos[1]
-        distance = math.sqrt(dx * dx + dy * dy)
-        max_dist = 180
-        distance = min(distance, max_dist)
-        
-        power = (distance / max_dist) * 25
-        
-        if distance > 15:
-            fx = dx / distance
-            fy = dy / distance
-            return fx, fy, power
-        return 0, 0, 0
