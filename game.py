@@ -31,10 +31,9 @@ class BilliardGame:
         self.cue_hit_sound = None
         
         self.pending_foul = False
-        self.pocketed_this_turn = False  # Был ли забит шар в этом ударе
-        self.turn_processed = False      # Флаг, что смена хода уже обработана
+        self.pocketed_this_turn = False
+        self.turn_processed = False
         
-        # Таймер
         self.start_time = time.time()
         self.elapsed_time = 0
         
@@ -104,6 +103,7 @@ class BilliardGame:
         self.pocketed_this_turn = False
         self.turn_processed = False
         self.start_time = time.time()
+        self.elapsed_time = 0
         
         cue_ball = Ball(CUE_BALL_X, CUE_BALL_Y, (255, 255, 255), 
                        number=None, ball_type='cue')
@@ -124,15 +124,20 @@ class BilliardGame:
     def assign_player_types(self, pocketed_ball):
         if self.types_assigned:
             return
-        if pocketed_ball.ball_type == 'solid':
+        
+        current_type = pocketed_ball.ball_type
+        
+        if current_type == 'solid':
             self.player1_type = 'solid'
             self.player2_type = 'stripe'
-        elif pocketed_ball.ball_type == 'stripe':
+        elif current_type == 'stripe':
             self.player1_type = 'stripe'
             self.player2_type = 'solid'
         else:
             return
+        
         self.types_assigned = True
+        print(f"🎯 Типы назначены: Игрок 1 = {self.player1_type}, Игрок 2 = {self.player2_type}")
     
     def get_random_position(self):
         max_attempts = 100
@@ -158,24 +163,19 @@ class BilliardGame:
         return CUE_BALL_X, CUE_BALL_Y
     
     def handle_pocket(self, ball):
-        """Обработка попадания в лузу"""
         self.play_pocket_sound()
         
-        # Биток (белый шар) - фол
+        # === БИТОК (белый шар) - фол ===
         if ball.ball_type == 'cue':
-            x, y = self.get_random_position()
-            ball.x = x
-            ball.y = y
-            ball.vx = 0
-            ball.vy = 0
-            ball.in_pocket = False
             self.pending_foul = True
+            # Биток исчезает, будет переставлен позже
             return 'foul'
         
-        # Чёрный шар
+        # === ЧЁРНЫЙ ШАР ===
         elif ball.ball_type == 'black':
             my_type = self.player1_type if self.current_player == 1 else self.player2_type
             my_balls_left = len(self.get_remaining_balls_by_type(my_type))
+            
             if my_balls_left == 0:
                 self.winner = self.current_player
                 self.game_active = False
@@ -187,21 +187,29 @@ class BilliardGame:
                 self.pocketed_this_turn = True
                 return 'loss'
         
-        # Цветной шар
+        # === ЦВЕТНОЙ ШАР (solid или stripe) ===
         elif ball.ball_type in ['solid', 'stripe']:
+            # Если типы ещё не назначены - назначаем их
             if not self.types_assigned:
                 self.assign_player_types(ball)
+                # Первый забитый шар засчитывается текущему игроку
                 self.scores[self.current_player] += 1
                 self.pocketed_this_turn = True
                 return 'good'
             
+            # Определяем, чей это шар
             my_type = self.player1_type if self.current_player == 1 else self.player2_type
             
             if ball.ball_type == my_type:
+                # СВОЙ шар - очко текущему игроку, ход продолжается
                 self.scores[self.current_player] += 1
-                self.pocketed_this_turn = True  # Шар забит!
+                self.pocketed_this_turn = True
                 return 'good'
             else:
+                # ЧУЖОЙ шар - ФОЛ!
+                # Очко засчитывается СОПЕРНИКУ
+                opponent = 3 - self.current_player
+                self.scores[opponent] += 1
                 self.pending_foul = True
                 return 'foul'
         
@@ -210,7 +218,6 @@ class BilliardGame:
     def update_physics(self):
         any_moving = False
         
-        # Обновляем все шары
         for ball in self.balls:
             if not ball.in_pocket:
                 ball.update()
@@ -221,7 +228,6 @@ class BilliardGame:
                 if not ball.is_stopped():
                     any_moving = True
         
-        # Столкновения шаров между собой
         for i in range(len(self.balls)):
             for j in range(i + 1, len(self.balls)):
                 if not self.balls[i].in_pocket and not self.balls[j].in_pocket:
@@ -231,35 +237,34 @@ class BilliardGame:
         
         self.balls_moving = any_moving
         
-        # === КОГДА ШАРЫ ОСТАНОВИЛИСЬ (обрабатываем ТОЛЬКО ОДИН РАЗ) ===
+        # === КОГДА ШАРЫ ОСТАНОВИЛИСЬ ===
         if not any_moving and self.game_active and not self.winner and not self.turn_processed:
-            self.turn_processed = True  # Блокируем повторную обработку
+            self.turn_processed = True
             
-            # Если был фол (забит чужой шар или биток)
+            # === ОБРАБОТКА ФОЛА ===
             if self.pending_foul:
+                # Переставляем биток в случайное место
                 cue_ball = self.get_cue_ball()
                 if cue_ball:
+                    # Проверяем, не забит ли биток
+                    if cue_ball.in_pocket:
+                        cue_ball.in_pocket = False
                     x, y = self.get_random_position()
                     cue_ball.x = x
                     cue_ball.y = y
                     cue_ball.vx = 0
                     cue_ball.vy = 0
-                    cue_ball.in_pocket = False
                 self.pending_foul = False
-                # Фол - ход переходит к сопернику
+                # Ход переходит к сопернику
                 self.switch_player()
                 self.pocketed_this_turn = False
             else:
-                # Если НЕ было забито ни одного шара в этом ударе
+                # Если не было забито ни одного шара - промах, ход переходит
                 if not self.pocketed_this_turn:
-                    # Промах - ход переходит к сопернику
                     self.switch_player()
-                # Если шар был забит - ход остаётся у текущего игрока (ничего не делаем)
             
-            # Сбрасываем флаг для следующего удара
             self.pocketed_this_turn = False
         
-        # Если шары снова начали двигаться - сбрасываем флаг обработки
         if any_moving:
             self.turn_processed = False
         
