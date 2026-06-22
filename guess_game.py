@@ -133,7 +133,7 @@ class GuessGame:
             if dist1 == dist2:
                 # Ничья - показываем сообщение и перезапускаем
                 self.is_tie = True
-                self.tie_message = f"🤝 НИЧЬЯ! Оба игрока одинаково близки к {self.computer_number}! Играем заново..."
+                self.tie_message = f"НИЧЬЯ! Оба игрока одинаково близки к {self.computer_number}! Играем заново..."
                 self.tie_timer = 180  # 3 секунды показа
                 # Запускаем перезапуск через таймер
                 return
@@ -163,7 +163,7 @@ class GuessGame:
                 # Очищаем поля и начинаем заново
                 self.reset_game()
                 # После перезапуска показываем сообщение на короткое время
-                self.error_message = "🔄 Введите числа заново!"
+                self.error_message = "Введите числа заново!"
                 self.error_timer = 60
     
     def draw(self, screen):
@@ -180,9 +180,9 @@ class GuessGame:
         
         # Заголовок
         if self.is_tie:
-            title = self.font_title.render("🤝 НИЧЬЯ! ПЕРЕЗАПУСК...", True, (255, 200, 50))
+            title = self.font_title.render("НИЧЬЯ! ПЕРЕЗАПУСК...", True, (255, 200, 50))
         else:
-            title = self.font_title.render("🎯 КТО БЬЁТ ПЕРВЫМ?", True, COLORS['GOLD'])
+            title = self.font_title.render("КТО БЬЁТ ПЕРВЫМ?", True, COLORS['GOLD'])
         title_rect = title.get_rect(center=(SCREEN_WIDTH // 2, 150))
         screen.blit(title, title_rect)
         
@@ -209,7 +209,7 @@ class GuessGame:
             # Игрок 1
             if self.winner == 1:
                 color1 = COLORS['GOLD']
-                marker1 = "👑 "
+                marker1 = ""
             else:
                 color1 = (200, 200, 200)
                 marker1 = ""
@@ -220,7 +220,7 @@ class GuessGame:
             # Игрок 2
             if self.winner == 2:
                 color2 = COLORS['GOLD']
-                marker2 = "👑 "
+                marker2 = ""
             else:
                 color2 = (200, 200, 200)
                 marker2 = ""
@@ -229,7 +229,7 @@ class GuessGame:
             screen.blit(guess2_text, (SCREEN_WIDTH // 2 - 200, 330))
             
             # Победитель
-            winner_text = self.font_large.render(f"🏆 ПЕРВЫЙ ХОДИТ: {winner_name}", True, COLORS['GOLD'])
+            winner_text = self.font_large.render(f"ПЕРВЫЙ ХОДИТ: {winner_name}", True, COLORS['GOLD'])
             winner_rect = winner_text.get_rect(center=(SCREEN_WIDTH // 2, 420))
             screen.blit(winner_text, winner_rect)
             
