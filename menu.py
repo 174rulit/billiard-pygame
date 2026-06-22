@@ -106,7 +106,7 @@ class Menu:
         pygame.draw.rect(screen, COLORS['GOLD'], menu_rect, 3, 20)
         
         # Заголовок
-        title = self.font_title.render("🎱 БИЛЬЯРД", True, COLORS['GOLD'])
+        title = self.font_title.render("БИЛЬЯРД", True, COLORS['GOLD'])
         title_rect = title.get_rect(center=(SCREEN_WIDTH // 2, 170))
         screen.blit(title, title_rect)
         
